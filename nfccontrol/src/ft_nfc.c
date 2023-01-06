@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:09:04 by mochida           #+#    #+#             */
-/*   Updated: 2023/01/05 21:09:43 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/05 22:06:01 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,6 +21,7 @@
 #include "nfc_debug.h"
 #include "ft_nfc_transactions.h"
 #include "ft_messages.h"
+#include "nfc_security.h"
 #include "mifare1k.h"
 
 extern int	verbose;
@@ -236,14 +237,59 @@ int		nfc_get_card_atr(t_nfc *context, unsigned char *pbAtr)
 	return (0);
 }
 
+int		nfc_do_panic(t_nfc *context)
+{
+	extern int			g_card_type;
+	int					is_disconnected;
+	unsigned long		dwSendLength;
+	unsigned long		dwRecvLength;
+	unsigned char		pbRecvBuffer[20];
+	unsigned char		send_buffer[] = { 0xFF, 0x00, 0x40, /*LED CONTROL*/0b10010000, 0x04, /*T1 duration*/5, /*T2 duration*/1, /*blink times*/0x0a, /*link to buzzer*/0x01 };
+	t_udata				user_data;
+
+	dwSendLength = sizeof(send_buffer);
+	dwRecvLength = sizeof(pbRecvBuffer);
+	printf ("PANIC!\n");
+	msg_log("---------PANIC!---------");
+	context->rv = SCardTransmit(context->hCard, context->pioSendPci, send_buffer, dwSendLength, &context->pioRecvPci, pbRecvBuffer, &dwRecvLength);
+	if (context->rv)
+		debug_print_error("Panic LED:", context->rv);
+	nfc_disconnect(context);
+	while (1)
+	{
+		sleep(1);
+		system("date");
+		is_disconnected = nfc_connect(context);
+		if (!is_disconnected)
+		{
+			g_card_type = nfc_validate_card_type(context);
+			if (g_card_type == MIFARE1K)
+			{
+				nfc_start_transaction(context);
+				msg_get_udata(&user_data);
+				nfc_read_user_data(context, &user_data);
+				sec_validate_crc(context, &user_data);
+				if (!strcmp((const char *) user_data.group, "Bocal"))
+				{
+					nfc_end_transaction(context);
+					nfc_disconnect(context);
+					nfc_cleanup_before_exit(context);
+					exit (42);
+				}
+			}
+			printf("You are not from bocal!\n");
+			memset(&user_data, 0, sizeof(t_udata));
+			nfc_end_transaction(context);
+			nfc_disconnect(context);
+			g_card_type = UNKOWN_CARD;
+		}
+		printf("PANIC! CALL A STAFF MEMBER!\n");
+		sleep(1);
+	}
+}
+
 int		nfc_led(t_nfc *context, int led_status)
 {
-// LED_PANIC			-2	//turns panic mode on. (use for security)
-// LED_UNK_ERR			-1	//unknown error
-// LED_INVALID_CARD		0	//invalid card
-// LED_VALID_CARD		1	//valid card
-// LED_END_ERR			2	//error during transactions
-// LED_END_OK			3	//transactions completed successfully
 	unsigned long	dwSendLength;
 	unsigned long	dwRecvLength;
 	unsigned char	send_buffer[] =			{ 0xFF, 0x00, 0x40, /*LED CONTROL*/0b10010000, 0x04, /*T1 duration*/3, /*T2 duration*/1, /*blink times*/0x05, /*link to buzzer*/0x01 };
@@ -321,4 +367,3 @@ int		nfc_cleanup_before_exit(t_nfc *context)
 	free(context);
 	return (rv);
 }
-

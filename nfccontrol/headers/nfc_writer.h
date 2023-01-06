@@ -6,16 +6,19 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/01 18:36:13 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/03 20:24:13 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/05 22:21:06 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef NFC_WRITE_H
 # define NFC_WRITE_H
 
-# ifndef MIFARE_STRING_SIZE
-#  define MIFARE_STRING_SIZE 17
-# endif //MIFARE_STRING_SIZE
+#include "ft_nfc.h"
+#include "ft_nfc_transactions.h"
+#include "nfc_debug.h"
+#include "mifare1k.h"
+#include "nfc_defs.h"
+#include "nfc_security.h"
 
 typedef struct s_writer
 {

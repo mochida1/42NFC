@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/27 21:24:34 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 21:09:10 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/05 22:13:50 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@
 # endif //USER_ENTER
 
 
-typedef struct s_user_data
+typedef struct s_udata
 {
 	unsigned char	name[MIFARE_STRING_SIZE];
 	unsigned char	name2[MIFARE_STRING_SIZE];
@@ -74,6 +74,6 @@ typedef struct s_user_data
 }t_udata;
 
 int		routine_mifare(t_nfc *context);
-int		nfc_do_panic(t_nfc *context);
+int		nfc_read_user_data(t_nfc *context, t_udata *user_data);
 
 #endif //MIFARE1K_H

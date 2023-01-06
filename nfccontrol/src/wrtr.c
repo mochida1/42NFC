@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   me.c                                               :+:      :+:    :+:   */
+/*   writer.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/31 08:15:33 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 19:05:17 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/05 22:22:28 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,9 +23,6 @@
 #include <string.h>
 #include <unistd.h>
 #include <ctype.h>
-#include "ft_nfc.h"
-#include "ft_nfc_transactions.h"
-#include "nfc_defs.h"
 #include "nfc_writer.h"
 
 int verbose;

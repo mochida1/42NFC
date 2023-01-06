@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/27 14:24:32 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 21:08:42 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/05 22:21:16 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,5 +25,6 @@ int		nfc_get_card_atr(t_nfc *context, unsigned char pbAtr[]);
 int		nfc_validate_card_type(t_nfc *context);
 int		nfc_cleanup_before_exit(t_nfc *context);
 int		nfc_led(t_nfc *context, int led_status);
+int		nfc_do_panic(t_nfc *context);
 
 #endif //FT_NFC_H

@@ -8,12 +8,12 @@ SIN_BUILDDIR = single_objs
 VPATH = src
 
 # headers
-INCLUDES = -I ./headers
+INCLUDES = -I ./headers/
 
 # Lists sources. Manually because of norm...
 SRC = main.c ft_nfc.c ft_nfc_transactions.c nfc_debug.c mifare1k.c nfc_security.c ft_messages.c utils.c
-WRTR_SRC = me.c ft_nfc.c ft_nfc_transactions.c nfc_debug.c nfc_security.c
-SIN_SRC = single_op.c ft_nfc.c ft_nfc_transactions.c nfc_debug.c
+WRTR_SRC = wrtr.c ft_nfc.c ft_nfc_transactions.c nfc_debug.c mifare1k.c nfc_security.c ft_messages.c utils.c
+SIN_SRC = single_op.c ft_nfc.c ft_nfc_transactions.c nfc_debug.c mifare1k.c nfc_security.c ft_messages.c utils.c
 
 # Names sources
 SOURCES = $(SRC)

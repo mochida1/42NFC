@@ -1,0 +1,12 @@
+{
+	"files.associations": {
+		"cstdlib": "c",
+		"nfc_defs.h": "c",
+		"winscard.h": "c",
+		"pcsclite.h": "c",
+		"wintypes.h": "c",
+		"typeinfo": "c",
+		"ft_nfc_transactions.h": "c",
+		"ft_nfc.h": "c"
+	}
+}

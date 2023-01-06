@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/05 18:27:47 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 07:17:57 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 11:08:14 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ int	get_seconds_time(char *buffer)
 	time_t t;
 
 	t = time(NULL);
-	snprintf(buffer, 15, "%lu", t +725760);
+	snprintf(buffer, 15, "%lu", t);
 	return (0);
 }
 

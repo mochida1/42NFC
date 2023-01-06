@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/31 05:50:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 08:20:02 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 11:06:03 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include "nfc_defs.h"
 #include "mifare1k.h"
 #include "ft_nfc_transactions.h"
+#include "ft_messages.h"
 
 /* PROTOTYPES*/
 unsigned int sec_crc8(unsigned int crc, unsigned char const *data, size_t len);
@@ -31,16 +32,16 @@ void	check_for_ssh(void)
 		fd = popen("who | wc -l", "r");
 		fgets(buffer, 200, fd);
 		pclose(fd);
-		if (buffer[0] != '1' || strlen(buffer > 2)) // Certifies there aren't more than 10 terminals opened
+		if (buffer[0] != '1' || strlen(buffer) > 2) // Certifies there aren't more than 10 terminals opened
 		{
-			msg_log("SECURITY ALERT: SSH CONNECTION DETECTED.\n");
+			msg_log("CRITICAL: SSH CONNECTION DETECTED.\n", FT_MSG_SEC);
 			fd = popen("w", "r");
 			while (fgets(buffer, 200, fd))
 			{
-				msg_log(buffer);
+				msg_log(buffer, FT_MSG_SEC);
 			}
 			pclose(fd);
-			system("echo 1 > /proc/sys/kernel/sysrq");
+			system("echo 1 > /proc/sys/kernel/sysrq"); //reboots the system;
 			system("echo b > /proc/sysrq-trigger");
 		}
 	}
@@ -94,10 +95,13 @@ int				sec_nfc_update_crc(t_nfc *context, t_udata *user_data)
 	if (verbose)
 		debug_print_hex_bytebuffer(crc_string, 16);
 	if (nfc_write_block(context, crc_string, user_data->hash1_block))
-		{
-			fprintf(stderr, "CRITICAL ERROR: Couldn't update CRC;\n");
-			return (1);
-		}
+	{
+		msg_log("------CRITICAL-------", FT_MSG_ERR);
+		msg_log((char *) user_data->login, FT_MSG_ERR);
+		msg_log("crc update failed!", FT_MSG_ERR);
+		fprintf(stderr, "CRITICAL ERROR: Couldn't update CRC;\n");
+		return (1);
+	}
 	return (0);
 }
 
@@ -124,6 +128,7 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	unsigned char	const_data[65];
 	unsigned char	crc_string[17];
 
+	msg_log("starting CRC validation", FT_MSG_SEC);
 	if (verbose)
 		printf("Validating CRC\n");
 	memset(empty_string, 0, 17);
@@ -150,6 +155,7 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	}
 	if (!memcmp(empty_string, user_data->hash1, 16) && !memcmp("DATE", user_data->date, 4)) // if it's the 1st time the card was presented
 	{
+		msg_log("card is fresh, no CRC", FT_MSG_SEC);
 		if (verbose)
 			printf("Card is new. CRC not yet set.\n");
 		return (0);
@@ -157,6 +163,8 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	else if (memcmp(crc_string, user_data->hash1, 16)) // checks the crc;
 	{
 		//possible tampering detected!
+		msg_log("INVALID CRC, PANIC", FT_MSG_SEC);
+		msg_log((char *) user_data->login, FT_MSG_SEC);
 		if (verbose)
 			fprintf(stderr, "CRC DIDN'T MATCH! PANIC!.\n");
 		nfc_led(context, LED_PANIC);
@@ -164,6 +172,7 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	}
 	if (verbose)
 			printf("CRC validation ok.\n");
+	msg_log("CRC validation ok", FT_MSG_SEC);
 	return (0);
 }
 

@@ -6,15 +6,22 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:33:49 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 08:21:35 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 11:34:33 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <time.h>
 #include <string.h>
 #include <stdio.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include "mifare1k.h"
 #include "nfc_defs.h"
+#include "ft_messages.h"
+#include "dirent.h"
+#include "utils.h"
 
 #ifndef STANDALONE
 #define STANDALONE
@@ -31,6 +38,12 @@ void	msg_connect_to_broker(void)
 	#endif //PLAIN_SOCKET
 
 	#ifdef STANDALONE
+		struct stat st = {0};
+
+		if (stat("/var/log.hdd/ft_beep", &st) == -1) 
+		{
+			mkdir("/var/log.hdd/ft_beep", 0700);
+		}
 	#endif //STANDALONE
 	return ;
 }
@@ -38,8 +51,21 @@ void	msg_connect_to_broker(void)
 /* 
 	appends current date 
 */
+
+// FT_MSG_ERR 	 	-1
+// FT_MSG_GENERAL	0
+// FT_MSG_SEC 		1
+// FT_MSG_USERACT	2 
+
 int	msg_log(char *message, int type)
 {
+	char				buffer[256];
+	char				date[17];
+	static unsigned int	message_number;
+	
+	memset(buffer, 0, 256);
+	get_current_time(date);
+	snprintf(buffer, 256, "%06u %s %s\n", message_number, date, message);
 	#ifdef ZEROMQ
 	#endif //ZEROMQ
 
@@ -47,8 +73,23 @@ int	msg_log(char *message, int type)
 	#endif //PLAIN_SOCKET
 
 	#ifdef STANDALONE
+		int	fd;
+		if (type == FT_MSG_ERR)
+			fd = open("/var/log.hdd/ft_beep/error.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		else if (type == FT_MSG_GENERAL)
+			fd = open("/var/log.hdd/ft_beep/log.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		else if (type == FT_MSG_SEC)
+			fd = open("/var/log.hdd/ft_beep/sec.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		else if (type == FT_MSG_USERACT)
+			fd = open("/var/log.hdd/ft_beep/usr.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		else
+			fd = open("/var/log.hdd/ft_beep/mystery.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		write(fd, buffer, strlen(buffer));
+		close (fd);
 	#endif //STANDALONE
-	(void) message;
+	message_number++;
+	if (message_number > 999999)
+		message_number = 0;
 	return (0);
 }
 
@@ -111,6 +152,7 @@ int	msg_get_udata(t_udata *user_data)
 
 int	msg_validate_uuid(t_udata *user_data)
 {
+	// msg_log("validating uuid. jk, not implemented", FT_MSG_SEC);
 	(void) user_data;
 	return (0);
 }

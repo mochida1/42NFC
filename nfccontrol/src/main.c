@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:11:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 21:15:06 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 11:23:32 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,17 +32,13 @@
 # define FALSE 0
 #endif //TRUE
 
-char		g_broker_connected;
-char		g_broker_down;
-char		g_bocal_access;
-int			g_rc;
 int			verbose;
 
 int	routine_ntag21x(t_nfc *context)
 {
+	msg_log("card is of type ntag21X. Too bad.", FT_MSG_GENERAL);
 	nfc_start_transaction(context);
 	printf("Module not yet implemented. Sorry.\n");
-	nfc_led(context, LED_PANIC);
 	nfc_led(context, LED_INVALID_CARD);
 	nfc_end_transaction(context);
 	return (1);
@@ -63,13 +59,15 @@ int	nfc(void)
 	card_routine[MIFARE1K] = &routine_mifare;
 	card_routine[NTAG21X] = &routine_ntag21x;
 	context = ft_nfc_init();
+	msg_log("NFC service initialized", FT_MSG_GENERAL);
 	g_card_type = 0;
 	rc = 0;
 	
 	/* connect to a card */
-	while (!g_bocal_access)
+	while (1)
 	{
-		//seta led para verde
+		printf("Waiting for card\n");
+		msg_log("reader waiting for card", FT_MSG_GENERAL);
 		while (nfc_connect(context))
 		{
 			
@@ -80,28 +78,33 @@ int	nfc(void)
 		}
 		/* get card atr */
 		if (verbose)
-			printf("------Starting operations\n");
+			printf("Starting operations\n");
 		g_card_type = nfc_validate_card_type(context);
 		if (g_card_type == UNKOWN_CARD)
 		{
 			rc = 1;
+			msg_log("Unknown card type detected", FT_MSG_ERR);
 			nfc_led(context,LED_INVALID_CARD);
 			if (verbose)
 				fprintf(stderr, "NOT A VALID CARD!\n");
 		}
 		else if (g_card_type)
 		{
-			//set led to yellow
+			msg_log("Known card type detected", FT_MSG_GENERAL);
 			rc = card_routine[g_card_type](context);
 		}
 		/* card disconnect */
 		if (rc && verbose)
 			fprintf(stderr, "------Error: operations could not be concluded\n");
+		if (rc)
+			msg_log("operations failure", FT_MSG_ERR);
 		printf ("ENDING\n\n");
 		nfc_disconnect(context);
+		system("clear");
+		msg_log("Card disconnected", FT_MSG_GENERAL);
 	}
-
 	nfc_cleanup_before_exit(context);
+	msg_log("Exit issued", FT_MSG_GENERAL);
 	return EXIT_SUCCESS;
 }
 
@@ -142,22 +145,18 @@ void daemonize(void)
 
 void ft_exit(void)
 {
+	msg_log("Exit successful", FT_MSG_GENERAL);
 	printf("NOW LEAVING\n");
 }
 
-
-/*
-if ("who | wc -l" != 1) 
-	beepa até cartão do bocal ser ativado;
-*/
 int main (void)
 {
-	#define VERBOSE VERBOSE
 	#ifdef VERBOSE
 	verbose = 1;
 	#endif //VERBOSE
 	// daemonize();
 	msg_connect_to_broker();
+	msg_log("Program started", FT_MSG_GENERAL);
 	atexit (ft_exit);
 	nfc();
 	return (0);

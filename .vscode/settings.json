@@ -12,6 +12,7 @@
 		"nfc_debug.h": "c",
 		"nfc_security.h": "c",
 		"nfc_writer.h": "c",
-		"ctype.h": "c"
+		"ctype.h": "c",
+		"unistd.h": "c"
 	}
 }

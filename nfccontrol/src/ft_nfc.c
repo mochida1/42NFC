@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:09:04 by mochida           #+#    #+#             */
-/*   Updated: 2023/01/06 06:56:00 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 09:45:54 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -249,8 +249,8 @@ int		nfc_do_panic(t_nfc *context)
 
 	dwSendLength = sizeof(send_buffer);
 	dwRecvLength = sizeof(pbRecvBuffer);
-	printf ("PANIC!\n");
-	msg_log("---------PANIC!---------");
+	printf ("PANIC!");
+	msg_log("---------PANIC!---------", FT_MSG_ERR);
 	context->rv = SCardTransmit(context->hCard, context->pioSendPci, send_buffer, dwSendLength, &context->pioRecvPci, pbRecvBuffer, &dwRecvLength);
 	if (context->rv)
 		debug_print_error("Panic LED:", context->rv);

@@ -5,5 +5,5 @@ objs/
 single_objs/
 wrtr_objs/
 *.o
-text.c
+test.c
 a.out

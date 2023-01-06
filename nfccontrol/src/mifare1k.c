@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/27 21:24:30 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 07:20:43 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 11:32:15 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,7 +33,7 @@ int nfc_update_weekly(t_nfc *context, t_udata *user_data, char current_time[]);
 /* Displays a welcome message :) */
 void welcome_message(t_udata *user_data)
 {
-	printf("Welcome %s %s!\n", user_data->name, user_data->name2);
+	printf("\n\nWelcome %s (%s)!\n\n", user_data->name, user_data->name2);
 }
 
 void farewell_message(t_udata *user_data)
@@ -73,7 +73,9 @@ int	nfc_read_user_data(t_nfc *context, t_udata *user_data)
 	if (!nfc_auth_key(context, AUTH_A, user_data->login_block))
 	{
 		if (nfc_read_block(context, user_data->login, user_data->login_block))
+		{
 			err_flag = 3;
+		}
 	}
 	else
 	{
@@ -212,6 +214,8 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 {
 	unsigned char	current_time[17];
 
+	msg_log((char *) user_data->login, FT_MSG_GENERAL);
+	msg_log((char *) user_data->login, FT_MSG_USERACT);
 	if (!memcmp(user_data->date, "DATE", 4)) // if a new card is presented;
 	{
 		memset(current_time, 0 , 17);
@@ -222,7 +226,11 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 		nfc_load_auth_key(context, AUTH_A, user_data->date_psw, NULL);
 		nfc_auth_key(context, AUTH_A, user_data->date_block);
 		if (!nfc_write_block(context, current_time, user_data->date_block))
+		{
+			msg_log("login\n", FT_MSG_USERACT);
 			return(USER_ENTER);
+		}
+		msg_log("Unknown error at nfc_update_presence: nfc_read_block not performed", FT_MSG_ERR);
 		fprintf(stderr, "ERROR: Something really weird happenned when updating date. Please call a staff member.\n");
 		nfc_led(context, LED_PANIC);
 		return (USER_UNK);
@@ -241,11 +249,13 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 		nfc_auth_key(context, AUTH_A, user_data->date_block);
 		if (nfc_write_block(context, current_time, user_data->date_block))
 		{
+			msg_log("unable to write exit time", FT_MSG_ERR);
 			fprintf(stderr, "ERROR: Couldn't write updated exit time.\n");
 			nfc_led(context, LED_PANIC);
 			return (USER_UNK);
 		}
 		nfc_update_weekly(context, user_data, (char *)current_time);
+		msg_log("logout\n", FT_MSG_USERACT);
 		return (USER_EXIT);
 	}
 	else if (user_data->date[0] == '0') // if user is entering
@@ -262,6 +272,7 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 		nfc_auth_key(context, AUTH_A, user_data->date_block);
 		if (nfc_write_block(context, current_time, user_data->date_block))
 			fprintf(stderr, "ERROR: Couldn't write updated entrance time.\n");
+		msg_log("login\n", FT_MSG_USERACT);
 		return (USER_ENTER);
 	}
 	nfc_led(context, LED_PANIC); // If DATE[0] block is not equal DATE or '1' or '0', it means something is afoul;
@@ -294,7 +305,7 @@ int nfc_update_weekly(t_nfc *context, t_udata *user_data, char current_time[])
 
 		// writes to log the updated last week presence time;
 		memset(logfile, 0, 200);
-		snprintf(logfile, 200, "/var/log/ft_beep/%s.tim", (char *)user_data->login);
+		snprintf(logfile, 200, "/var/log.hdd/ft_beep/%s.tim", (char *)user_data->login);
 		if (verbose)
 			printf("Openinig file %s\n", logfile);
 		fd = open(logfile, O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
@@ -331,14 +342,17 @@ int	routine_mifare(t_nfc *context)
 	int				presence;
 	
 	presence = USER_UNK;
-	printf("Card is MIFARE1K\n");
+	printf("Please wait.\n");
+	msg_log("card type is MIFARE1k", FT_MSG_GENERAL);
 	/* begin transaction */
 	nfc_start_transaction(context);
 
 	/* Gets relevant blocks information*/
 	rc = msg_get_udata(&user_data);
+	msg_log("getting user data", FT_MSG_GENERAL);
 	if (rc)
 	{
+		msg_log("unable to get user data from server", FT_MSG_ERR);
 		nfc_led(context, LED_INVALID_CARD);
 		usleep(100);
 		nfc_end_transaction(context);
@@ -347,20 +361,32 @@ int	routine_mifare(t_nfc *context)
 	rc = nfc_read_user_data(context, &user_data);
 	if (rc)
 	{
+		msg_log("unable to read user data from card", FT_MSG_ERR);
 		nfc_led(context, LED_INVALID_CARD);
 		usleep(100);
 		nfc_end_transaction(context);
 		return (1);
 	}
+	msg_log((char *) user_data.login, FT_MSG_USERACT);
+	msg_log("accessing...", FT_MSG_USERACT);
+	msg_log("user data acquisition successful", FT_MSG_GENERAL);
+	msg_log((char *) user_data.login, FT_MSG_GENERAL);
+	msg_log("starting security validations", FT_MSG_GENERAL);
 	rc = sec_validate_crc(context, &user_data);
 	rc = msg_validate_uuid(&user_data);
+	msg_log("security validations ok", FT_MSG_GENERAL);
 	if (rc)
 		return (1);
 	nfc_reconnect(context);
+	msg_log("---starting WRITING operations---", FT_MSG_GENERAL);
+	msg_log("updating date", FT_MSG_GENERAL);
 	presence = nfc_update_presence(context, &user_data);
+	msg_log("updating date ok", FT_MSG_GENERAL);
+	msg_log("updating crc", FT_MSG_GENERAL);
 	rc = nfc_read_user_data(context, &user_data);
-	sec_nfc_update_crc(context, &user_data);
-	printf("Presence: %d\n", presence);
+	if (!sec_nfc_update_crc(context, &user_data))
+		msg_log("updating crc ok", FT_MSG_GENERAL);
+	msg_log("---finished WRITING operations---", FT_MSG_GENERAL);
 	if (presence == USER_ENTER)
 		welcome_message(&user_data);
 	else if (presence == USER_EXIT)
@@ -368,6 +394,8 @@ int	routine_mifare(t_nfc *context)
 	
 	if (!strcmp((char *)user_data.group, "Bocal"))
 	{
+		msg_log("BOCAL ACCESS", FT_MSG_SEC);
+		msg_log((char *) user_data.login, FT_MSG_SEC);
 		nfc_end_transaction(context);
 		nfc_disconnect(context);
 		nfc_cleanup_before_exit(context);
@@ -376,6 +404,8 @@ int	routine_mifare(t_nfc *context)
 	/* end transaction */
 	printf ("END TRANSACTION\n");
 	nfc_led(context, LED_END_OK);
+	if (presence == USER_EXIT)
+		nfc_led(context, LED_END_OK);
 	nfc_end_transaction(context);
 	return (0);
 }

@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:34:11 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 08:25:26 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 08:45:41 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 #define FT_MSG_USERACT	2
 
 int 	msg_get_udata(t_udata *user_data);
-int		msg_log(char *message);
+int		msg_log(char *message, int type);
 void	msg_connect_to_broker(void);
 int		msg_validate_uuid(t_udata *user_data);
 

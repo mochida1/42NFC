@@ -1,5 +1,10 @@
 # 42NFC
 
+# todo
+* implement support for mifare ultralight
+* add support for broker (zeromq/vanilla socket)
+* remove interdependencies from source files
+* ...maybe report currently weekly time?
 
 # Known issues
 * if after 1 whole year, in the same week of the year as the user last left (after exactly 53 weeks), the user enters again, there will be a discrepancy in this year's weekly hours.

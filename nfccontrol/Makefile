@@ -92,7 +92,9 @@ fclean: clean
 
 re: fclean all
 
-# from here on shit ain't mandatory or bonus
+prepare: 
+	sudo prepare.sh
+
 run: all
 	$(VAL)
 

@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:09:04 by mochida           #+#    #+#             */
-/*   Updated: 2023/01/05 22:06:01 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 06:56:00 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -165,7 +165,7 @@ int		nfc_disconnect(t_nfc *context)
 	rgReaderStates[0].dwCurrentState = SCARD_STATE_EMPTY;
 	printf ("Waiting for card to be removed\n");
 	while (!SCardGetStatusChange(context->hContext, 10, rgReaderStates, 1))
-		continue ;
+		sleep (1);
 	if (verbose)
 		printf("Card successfully disconnected.\n");
 	return (0);

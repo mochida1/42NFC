@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/31 05:50:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 18:09:02 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 08:20:02 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,37 @@
 #include "mifare1k.h"
 #include "ft_nfc_transactions.h"
 
+/* PROTOTYPES*/
+unsigned int sec_crc8(unsigned int crc, unsigned char const *data, size_t len);
+
 void	check_for_ssh(void)
 {
-	//se houver conexão por SSH, desliga o pc.
+	FILE	*fd;
+	char	buffer[200];
+
+	while (1)
+	{
+		fd = popen("who | wc -l", "r");
+		fgets(buffer, 200, fd);
+		pclose(fd);
+		if (buffer[0] != '1' || strlen(buffer > 2)) // Certifies there aren't more than 10 terminals opened
+		{
+			msg_log("SECURITY ALERT: SSH CONNECTION DETECTED.\n");
+			fd = popen("w", "r");
+			while (fgets(buffer, 200, fd))
+			{
+				msg_log(buffer);
+			}
+			pclose(fd);
+			system("echo 1 > /proc/sys/kernel/sysrq");
+			system("echo b > /proc/sysrq-trigger");
+		}
+	}
 }
 
+/*
+	uses the elements CRCs as a single 16 byte crc_string;
+*/
 int	sec_get_crc_string(unsigned char crc_string[], unsigned int *crc, int elements)
 {
 	size_t			size;
@@ -41,11 +67,43 @@ int	sec_get_crc_string(unsigned char crc_string[], unsigned int *crc, int elemen
 	return (0);
 }
 
-int				sec_nfc_update_crc(void) /*(t_nfc *context, t_udata *user_data)*/
+#define CRC_
+
+int				sec_nfc_update_crc(t_nfc *context, t_udata *user_data)
 {
+	unsigned int	crc[4];
+	unsigned char	const_data[65];
+	unsigned char	crc_string[17];
+	nfc_load_auth_key(context, AUTH_A, user_data->hash1_psw, NULL);
+	nfc_auth_key(context, AUTH_A, user_data->hash1_block);
+	memset(const_data, 0 , 65);
+	strncat((char *)const_data, (const char *)user_data->login, 16);
+	strncat((char *)const_data, (const char *)user_data->group, 16);
+	strncat((char *)const_data, (const char *)user_data->campus, 16);
+	strncat((char *)const_data, (const char *)user_data->cohort, 16);
+	crc[0] = sec_crc8(user_data->login_block, const_data, 64);			// generates crc digest of login+group+campus+cohort
+	crc[1] = sec_crc8(user_data->date_block, user_data->date, 16);		// crc date
+	crc[2] = sec_crc8(user_data->weekly_block, user_data->weekly, 16);	// crc weekly
+	memset(const_data,0 , 65);
+	strncat((char *)const_data, (const char *)user_data->uuid1, 16);
+	strncat((char *)const_data, (const char *)user_data->uuid2, 16);
+	strncat((char *)const_data, (const char *)user_data->uuid3, 16);
+	crc[3] = sec_crc8(user_data->uuid1_block, const_data, 16);
+
+	sec_get_crc_string(crc_string, crc, 4);	
+	if (verbose)
+		debug_print_hex_bytebuffer(crc_string, 16);
+	if (nfc_write_block(context, crc_string, user_data->hash1_block))
+		{
+			fprintf(stderr, "CRITICAL ERROR: Couldn't update CRC;\n");
+			return (1);
+		}
 	return (0);
 }
 
+/*
+	Returns a CRC from data of size len using a seed CRC;
+*/
 unsigned int sec_crc8(unsigned int crc, unsigned char const *data, size_t len)
 {
 	if (data == NULL)
@@ -74,7 +132,7 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	strncat((char *)const_data, (const char *)user_data->group, 16);
 	strncat((char *)const_data, (const char *)user_data->campus, 16);
 	strncat((char *)const_data, (const char *)user_data->cohort, 16);
-	crc[0] = sec_crc8(user_data->login_block, const_data, 64);			// faz o crc de login+group+campus+cohort
+	crc[0] = sec_crc8(user_data->login_block, const_data, 64);			// generates crc digest of login+group+campus+cohort
 	crc[1] = sec_crc8(user_data->date_block, user_data->date, 16);		// crc date
 	crc[2] = sec_crc8(user_data->weekly_block, user_data->weekly, 16);	// crc weekly
 	memset(const_data,0 , 65);
@@ -83,7 +141,7 @@ int		sec_validate_crc(t_nfc *context, t_udata *user_data)
 	strncat((char *)const_data, (const char *)user_data->uuid3, 16);
 	crc[3] = sec_crc8(user_data->uuid1_block, const_data, 16);			//crc uuid1+uuid2+uuid3;
 
-	//checa os CRC's
+	//ccheck if CRCs are valid;
 	sec_get_crc_string(crc_string, crc, 4);
 	if (verbose)
 	{

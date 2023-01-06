@@ -6,16 +6,18 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/27 21:24:30 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 22:03:07 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 07:20:43 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include <PCSC/winscard.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <string.h>
+#include <fcntl.h>
 #include "nfc_defs.h"
 #include "ft_nfc.h"
 #include "ft_nfc_transactions.h"
-#include "string.h"
 #include "mifare1k.h"
 #include "ft_messages.h"
 #include "nfc_security.h"
@@ -23,11 +25,20 @@
 
 extern int	verbose;
 
+/* PROTOTYPES*/
 int	nfc_read_user_data(t_nfc *context, t_udata *user_data);
+int nfc_update_weekly(t_nfc *context, t_udata *user_data, char current_time[]);
 
+
+/* Displays a welcome message :) */
 void welcome_message(t_udata *user_data)
 {
 	printf("Welcome %s %s!\n", user_data->name, user_data->name2);
+}
+
+void farewell_message(t_udata *user_data)
+{
+	printf("Bye, %s!\n", (char *)user_data->login);
 }
 
 int	nfc_read_user_data(t_nfc *context, t_udata *user_data)
@@ -196,24 +207,123 @@ int	nfc_read_user_data(t_nfc *context, t_udata *user_data)
 	return (err_flag);
 }
 
+/* deals with date block*/
 int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 {
 	unsigned char	current_time[17];
 
-	if (!memcmp(user_data->date, "DATE", 4))
+	if (!memcmp(user_data->date, "DATE", 4)) // if a new card is presented;
 	{
 		memset(current_time, 0 , 17);
-		current_time[0] = '1';
-		current_time[1] = ' ';
-		get_current_time((char *) &current_time[2]);
-		printf("current_time: |%s|\n", (char *)current_time);
-		// nfc_write_block(context, current_time, user_data->date_block);
-		return(USER_ENTER);
-		(void) context;
+		memcpy(current_time, "1 ", 2);
+		get_seconds_time((char *) &current_time[2]);
+		if (verbose)
+			printf("current_time: %s\n", (char *)current_time);
+		nfc_load_auth_key(context, AUTH_A, user_data->date_psw, NULL);
+		nfc_auth_key(context, AUTH_A, user_data->date_block);
+		if (!nfc_write_block(context, current_time, user_data->date_block))
+			return(USER_ENTER);
+		fprintf(stderr, "ERROR: Something really weird happenned when updating date. Please call a staff member.\n");
+		nfc_led(context, LED_PANIC);
+		return (USER_UNK);
 	}
-	return (USER_EXIT);
+	else if (user_data->date[0] == '1') // if user is leaving
+	{
+		memset(current_time, 0, 17);
+		memcpy(current_time, "0 ", 2);
+		get_seconds_time((char *) &current_time[2]);
+		if (verbose)
+		{
+			printf("Updating date block to exit.\n");
+			printf("current_time: %s\n", (char *)current_time);
+		}
+		nfc_load_auth_key(context, AUTH_A, user_data->date_psw, NULL);
+		nfc_auth_key(context, AUTH_A, user_data->date_block);
+		if (nfc_write_block(context, current_time, user_data->date_block))
+		{
+			fprintf(stderr, "ERROR: Couldn't write updated exit time.\n");
+			nfc_led(context, LED_PANIC);
+			return (USER_UNK);
+		}
+		nfc_update_weekly(context, user_data, (char *)current_time);
+		return (USER_EXIT);
+	}
+	else if (user_data->date[0] == '0') // if user is entering
+	{
+		memset(current_time, 0, 17);
+		memcpy(current_time, "1 ", 2);
+		get_seconds_time((char *) &current_time[2]);
+		if (verbose)
+		{
+			printf("Updating date block to entrance.\n");
+			printf("current_time: %s\n", (char *)current_time);
+		}
+		nfc_load_auth_key(context, AUTH_A, user_data->date_psw, NULL);
+		nfc_auth_key(context, AUTH_A, user_data->date_block);
+		if (nfc_write_block(context, current_time, user_data->date_block))
+			fprintf(stderr, "ERROR: Couldn't write updated entrance time.\n");
+		return (USER_ENTER);
+	}
+	nfc_led(context, LED_PANIC); // If DATE[0] block is not equal DATE or '1' or '0', it means something is afoul;
+	return (USER_UNK);
 }
 
+int nfc_update_weekly(t_nfc *context, t_udata *user_data, char current_time[])
+{
+	unsigned int	week;
+	unsigned char	buffer[17];
+	char			logfile[200];
+	unsigned long	current_weekly;
+	unsigned long	new_weekly;
+	int				fd;
+	int				sec;
+	int				total_min;
+	int				min;
+	int				hours;
+
+	week = get_week();
+	current_weekly = atol((char *)&user_data->weekly[3]);
+	new_weekly = current_weekly + atol(&current_time[2]) - atol((char *)&user_data->date[2]);
+
+	if (atoi((char *)user_data->weekly) != (int) week)
+	{
+		sec = new_weekly % 60;
+		total_min = (new_weekly - sec) / 60;
+		min = total_min % 60;
+		hours = (total_min - min) / 60;
+
+		// writes to log the updated last week presence time;
+		memset(logfile, 0, 200);
+		snprintf(logfile, 200, "/var/log/ft_beep/%s.tim", (char *)user_data->login);
+		if (verbose)
+			printf("Openinig file %s\n", logfile);
+		fd = open(logfile, O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+		if (fd < 0)
+			fprintf(stderr, "ERROR: Couldn't open/create user file!\n");
+		memset(logfile, 0, 200);
+		snprintf(logfile, 200, "%s\t%02d %lu %03d:%02d:%02d\n", (char *)user_data->login, atoi((char *)user_data->weekly), new_weekly, hours, min, sec);
+		write(fd, logfile, strlen(logfile));
+
+		// reseta bloco weekly (XX 0\0\0\0\0...)
+		memset(buffer, 0, 17);
+		snprintf((char *) buffer, 17,  "%02d 0", week);
+		nfc_load_auth_key(context, AUTH_A, user_data->weekly_psw, NULL);
+		nfc_auth_key(context, AUTH_A, user_data->weekly_block);
+		nfc_write_block(context, buffer, user_data->weekly_block);
+		return (0);
+	}
+	memset(buffer, 0, 17);
+	snprintf((char *) buffer, 17,  "%02d %lu", week, new_weekly);
+	nfc_load_auth_key(context, AUTH_A, user_data->weekly_psw, NULL);
+	nfc_auth_key(context, AUTH_A, user_data->weekly_block);
+	nfc_write_block(context, buffer, user_data->weekly_block);
+	return (0);
+}
+
+/* 
+	Routines in case a mifare1k card is presented and recognized
+	Does every transaction here.
+*/
 int	routine_mifare(t_nfc *context)
 {
 	t_udata			user_data;
@@ -246,11 +356,23 @@ int	routine_mifare(t_nfc *context)
 	rc = msg_validate_uuid(&user_data);
 	if (rc)
 		return (1);
+	nfc_reconnect(context);
 	presence = nfc_update_presence(context, &user_data);
+	rc = nfc_read_user_data(context, &user_data);
+	sec_nfc_update_crc(context, &user_data);
 	printf("Presence: %d\n", presence);
-	/* show welcome message */
-	welcome_message(&user_data);
-
+	if (presence == USER_ENTER)
+		welcome_message(&user_data);
+	else if (presence == USER_EXIT)
+		farewell_message(&user_data);
+	
+	if (!strcmp((char *)user_data.group, "Bocal"))
+	{
+		nfc_end_transaction(context);
+		nfc_disconnect(context);
+		nfc_cleanup_before_exit(context);
+		exit (42);
+	}
 	/* end transaction */
 	printf ("END TRANSACTION\n");
 	nfc_led(context, LED_END_OK);

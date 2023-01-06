@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/05 16:35:26 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 16:36:11 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 01:19:47 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,5 +14,6 @@
 # define NFC_SECURITY_H
 
 int		sec_validate_crc(t_nfc *context, t_udata *user_data);
+int		sec_nfc_update_crc(t_nfc *context, t_udata *user_data);
 
 #endif //NFC_SECURITY_H

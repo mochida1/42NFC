@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 19:13:24 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 03:41:50 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 06:27:29 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -202,6 +202,8 @@ int main (void)
 				}
 				ctrl = 1;
 			}
+			if (send_string[0] == '\n'&& send_string[1] == 0)
+				send_string[0] = 0;
 			ctrl = 0;
 			nfc_read_block(context, buffer, block);
 			if (nfc_write_block(context, send_string, block))

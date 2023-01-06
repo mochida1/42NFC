@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:33:49 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/05 19:39:54 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 08:21:35 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -38,7 +38,7 @@ void	msg_connect_to_broker(void)
 /* 
 	appends current date 
 */
-int	msg_log(char *message)
+int	msg_log(char *message, int type)
 {
 	#ifdef ZEROMQ
 	#endif //ZEROMQ

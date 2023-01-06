@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/31 05:50:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 12:15:26 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/01/06 16:41:46 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,10 +29,10 @@ void	*check_for_ssh(void)
 
 	while (1)
 	{
-		fd = popen("who | wc -l", "r");
+		fd = popen("who | grep pts | wc -l", "r");
 		fgets(buffer, 200, fd);
 		pclose(fd);
-		if (buffer[0] != '1' || strlen(buffer) > 2) // Certifies there aren't more than 10 terminals opened
+		if (buffer[0] != '0' || strlen(buffer) > 2) // Certifies there aren't more than 10 terminals opened
 		{
 			msg_log("CRITICAL: SSH CONNECTION DETECTED.\n", FT_MSG_SEC);
 			fd = popen("w", "r");

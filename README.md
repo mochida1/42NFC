@@ -1,5 +1,10 @@
 # 42NFC
 
+# Basic instructions
+* google "systemctl set-default multi-user.target"
+* to run a boot: /etc/init.d/w
+* binaries are inside /usr/sbin/
+
 # todo
 * implement support for mifare ultralight
 * add support for broker (zeromq/vanilla socket)

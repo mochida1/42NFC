@@ -18,6 +18,7 @@
 * ...maybe report currently weekly time?
 
 # Known issues
+* bocal card does not beep. Kinda hard to know if it worked.
 * changing ssh port from 22 ends up in unexpected behaviour.
 * if after 1 whole year, in the same week of the year as the user last left (after exactly 53 weeks), the user enters again, there will be a discrepancy in this year's weekly hours.
 * there's still no redundancy on the card. Removing it while the operation is in process will likely corrupt it's data.

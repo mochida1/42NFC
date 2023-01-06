@@ -4,3 +4,6 @@ nfc_writer
 objs/
 single_objs/
 wrtr_objs/
+*.o
+text.c
+a.out

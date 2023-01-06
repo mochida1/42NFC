@@ -1,6 +1,6 @@
 # 42NFC
 
-# Basic instructions
+# Basic instructions and things to know
 * google "systemctl set-default multi-user.target"
 * to run a boot: /etc/init.d/w
 * binaries are inside /usr/sbin/
@@ -9,7 +9,7 @@
 * template file for writer is /etc/ft_beep/template_mifare1k
 * weeks file is /etc/ft_beep/weeks.cfg
 * to connect via wi-fi use **nmtui**
-
+* service is initialized by systemctl
 
 # todo
 * implement support for mifare ultralight

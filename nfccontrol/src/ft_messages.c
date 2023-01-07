@@ -40,9 +40,9 @@ void	msg_connect_to_broker(void)
 	#ifdef STANDALONE
 		struct stat st = {0};
 
-		if (stat("/var/log.hdd/ft_beep", &st) == -1) 
+		if (stat("/ft_beep", &st) == -1) 
 		{
-			mkdir("/var/log.hdd/ft_beep", 0700);
+			mkdir("/ft_beep", 0700);
 		}
 	#endif //STANDALONE
 	return ;
@@ -75,15 +75,15 @@ int	msg_log(char *message, int type)
 	#ifdef STANDALONE
 		int	fd;
 		if (type == FT_MSG_ERR)
-			fd = open("/var/log.hdd/ft_beep/error.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+			fd = open("/ft_beep/error.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 		else if (type == FT_MSG_GENERAL)
-			fd = open("/var/log.hdd/ft_beep/log.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+			fd = open("/ft_beep/log.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 		else if (type == FT_MSG_SEC)
-			fd = open("/var/log.hdd/ft_beep/sec.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+			fd = open("/ft_beep/sec.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 		else if (type == FT_MSG_USERACT)
-			fd = open("/var/log.hdd/ft_beep/usr.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+			fd = open("/ft_beep/usr.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 		else
-			fd = open("/var/log.hdd/ft_beep/mystery.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
+			fd = open("/ft_beep/mystery.log", O_RDWR | O_APPEND | O_CREAT, S_IRWXU);
 		write(fd, buffer, strlen(buffer));
 		close (fd);
 	#endif //STANDALONE

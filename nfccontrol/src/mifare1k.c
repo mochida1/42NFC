@@ -305,7 +305,7 @@ int nfc_update_weekly(t_nfc *context, t_udata *user_data, char current_time[])
 
 		// writes to log the updated last week presence time;
 		memset(logfile, 0, 200);
-		snprintf(logfile, 200, "/var/log.hdd/ft_beep/%s.tim", (char *)user_data->login);
+		snprintf(logfile, 200, "/ft_beep/%s.tim", (char *)user_data->login);
 		if (verbose)
 			printf("Openinig file %s\n", logfile);
 		fd = open(logfile, O_RDWR | O_APPEND | O_CREAT, S_IRWXU);

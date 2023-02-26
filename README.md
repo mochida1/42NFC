@@ -8,6 +8,7 @@
 * logs are in /var/bin/ft_beep
 * template file for writer is /etc/ft_beep/template_mifare1k
 * weeks file is /etc/ft_beep/weeks.cfg
+* endpoints are in /etc/ft_beep/enpoints.cfg
 * to connect via wi-fi use **nmtui**
 * service is initialized by systemctl
 

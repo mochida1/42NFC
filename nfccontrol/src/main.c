@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/10 15:11:16 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 12:07:58 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/02/26 19:55:57 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,6 +26,7 @@
 #include "mifare1k.h"
 #include "ft_messages.h"
 #include "nfc_security.h"
+#include "utils.h"
 
 #ifndef TRUE
 # define TRUE 1
@@ -33,6 +34,8 @@
 #endif //TRUE
 
 int			verbose;
+void		*zmq_ctx;
+
 
 int	routine_ntag21x(t_nfc *context)
 {
@@ -151,10 +154,10 @@ void ft_exit(void)
 
 int main (void)
 {
-	pthread_t *tid;
+	// pthread_t *tid;
 
-	tid = malloc (sizeof(pthread_t));
-	if (pthread_create(tid, NULL, (void *)check_for_ssh, NULL))
+	// tid = malloc (sizeof(pthread_t));
+	// if (pthread_create(tid, NULL, (void *)check_for_ssh, NULL))
 	#ifdef VERBOSE
 	verbose = 1; 
 	#endif //VERBOSE

@@ -7,3 +7,4 @@ wrtr_objs/
 *.o
 test.c
 a.out
+.vscode

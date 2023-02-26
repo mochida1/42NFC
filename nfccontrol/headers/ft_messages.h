@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:34:11 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 08:45:41 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/02/26 19:43:16 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,7 @@
 #define FT_MSG_GENERAL	0
 #define FT_MSG_SEC 		1
 #define FT_MSG_USERACT	2
+#define	FT_ZMQ_LOG		3
 
 int 	msg_get_udata(t_udata *user_data);
 int		msg_log(char *message, int type);

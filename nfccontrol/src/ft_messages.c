@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:33:49 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 11:34:33 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/02/26 20:10:51 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,10 +22,12 @@
 #include "ft_messages.h"
 #include "dirent.h"
 #include "utils.h"
+#include <zmq.h>
 
 #ifndef STANDALONE
 #define STANDALONE
 #endif //standalone
+#define ZEROMQ
 
 extern int	verbose;
 
@@ -59,14 +61,44 @@ void	msg_connect_to_broker(void)
 
 int	msg_log(char *message, int type)
 {
-	char				buffer[256];
-	char				date[17];
-	static unsigned int	message_number;
+	char					buffer[256];
+	char					rcv_buffer[256];
+	char					date[17];
+	static unsigned int		message_number;
+	static unsigned char	is_connect;
 	
 	memset(buffer, 0, 256);
 	get_current_time(date);
 	snprintf(buffer, 256, "%06u %s %s\n", message_number, date, message);
+
 	#ifdef ZEROMQ
+	static void	*zmq_ctx;
+	static void	*req_sock;
+
+	if (!zmq_ctx)
+		{zmq_ctx = zmq_ctx_new(); printf ("init_ZMQ");}
+	if (!req_sock)
+		req_sock = zmq_socket(zmq_ctx, ZMQ_REQ);
+	if (!is_connect)
+	{
+		zmq_connect (req_sock, "tcp://localhost:5555"); //mudar aqui pra pegar arquivo editavel;
+		is_connect = 1;
+	}
+	if (type == FT_MSG_GENERAL)
+		if (!strcmp(message, "Exit successful"))
+		{
+			zmq_close(req_sock);
+			zmq_ctx_destroy(zmq_ctx);
+		}
+	if (type == FT_ZMQ_LOG)
+	{
+		zmq_send(req_sock, message, 256, 0);
+		zmq_recv(req_sock, rcv_buffer, 256, 0);
+	}
+	//FAZER TRATATIVAS DE RETORNO DO SERVER AQUI
+	
+
+
 	#endif //ZEROMQ
 
 	#ifdef PLAIN_SOCKET

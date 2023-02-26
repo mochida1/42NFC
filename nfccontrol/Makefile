@@ -34,7 +34,7 @@ FSF = -fsanitize=address
 
 $(NAME): $(BUILDDIR) $(OBJS)
 	@printf "Compiling...\n"
-	@$(CC) $(CF) $(OBJS) $(INCLUDES) -lpcsclite -lpthread -o $(NAME)
+	@$(CC) $(CF) $(OBJS) $(INCLUDES) -lzmq -lpcsclite -lpthread -o $(NAME)
 	@printf "Done!\n"
 
 $(BUILDDIR):

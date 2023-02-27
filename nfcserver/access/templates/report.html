@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Weekly Report</title>
+</head>
+<body>
+	<h1>Weekly Report</h1>
+	{% if report_table %}
+		{% load render_table from django_tables2 %}
+		{% render_table report_table %}
+	{% else %}
+		<p>No data available.</p>
+	{% endif %}
+</body>
+</html>

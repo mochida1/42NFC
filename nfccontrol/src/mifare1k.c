@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/12/27 21:24:30 by hmochida          #+#    #+#             */
-/*   Updated: 2023/01/06 11:32:15 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/02/26 20:31:30 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -213,6 +213,7 @@ int	nfc_read_user_data(t_nfc *context, t_udata *user_data)
 int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 {
 	unsigned char	current_time[17];
+	char			zmq_msg[256];
 
 	msg_log((char *) user_data->login, FT_MSG_GENERAL);
 	msg_log((char *) user_data->login, FT_MSG_USERACT);
@@ -256,6 +257,8 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 		}
 		nfc_update_weekly(context, user_data, (char *)current_time);
 		msg_log("logout\n", FT_MSG_USERACT);
+		sprintf(zmq_msg, "%s\t1\t%s", user_data->login, &current_time[2]);
+		msg_log (zmq_msg, FT_ZMQ_LOG);
 		return (USER_EXIT);
 	}
 	else if (user_data->date[0] == '0') // if user is entering
@@ -273,6 +276,8 @@ int	nfc_update_presence(t_nfc *context, t_udata *user_data)
 		if (nfc_write_block(context, current_time, user_data->date_block))
 			fprintf(stderr, "ERROR: Couldn't write updated entrance time.\n");
 		msg_log("login\n", FT_MSG_USERACT);
+		sprintf(zmq_msg, "%s\t0\t%s", user_data->login, &current_time[2]);
+		msg_log (zmq_msg, FT_ZMQ_LOG);
 		return (USER_ENTER);
 	}
 	nfc_led(context, LED_PANIC); // If DATE[0] block is not equal DATE or '1' or '0', it means something is afoul;

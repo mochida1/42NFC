@@ -13,6 +13,7 @@
 		"nfc_security.h": "c",
 		"nfc_writer.h": "c",
 		"ctype.h": "c",
-		"unistd.h": "c"
+		"unistd.h": "c",
+		"ft_messages.h": "c"
 	}
 }

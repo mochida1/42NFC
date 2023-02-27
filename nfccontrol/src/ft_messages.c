@@ -6,7 +6,7 @@
 /*   By: hmochida <hmochida@student.42sp.org.br>    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2023/01/04 15:33:49 by hmochida          #+#    #+#             */
-/*   Updated: 2023/02/26 20:10:51 by hmochida         ###   ########.fr       */
+/*   Updated: 2023/02/26 22:23:21 by hmochida         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,12 +17,13 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <zmq.h>
+#include <ctype.h>
 #include "mifare1k.h"
 #include "nfc_defs.h"
 #include "ft_messages.h"
 #include "dirent.h"
 #include "utils.h"
-#include <zmq.h>
 
 #ifndef STANDALONE
 #define STANDALONE
@@ -50,9 +51,31 @@ void	msg_connect_to_broker(void)
 	return ;
 }
 
-/* 
-	appends current date 
-*/
+void	get_endpoint_from_config_file(char *endpoint_name, char *dest_buffer)
+{
+	FILE	*fd;
+	int		name_len;
+	char	rd_buff[256];
+	int		i;
+
+	i = 0;
+	name_len = (int) strlen(endpoint_name);
+	fd = fopen("/etc/ft_beep/endpoints.cfg","r");
+	while(fgets(rd_buff, 256, fd))
+	{
+		if (strncmp(endpoint_name, rd_buff, name_len))
+			continue;
+		else
+		while(rd_buff[name_len + i])
+		{
+			if(isprint(rd_buff[name_len + i]))
+				dest_buffer[i] = rd_buff[name_len + i];
+			i++;
+		}
+	}
+	printf ("Server: %s\n", dest_buffer);
+	fclose(fd);
+}
 
 // FT_MSG_ERR 	 	-1
 // FT_MSG_GENERAL	0
@@ -65,7 +88,7 @@ int	msg_log(char *message, int type)
 	char					rcv_buffer[256];
 	char					date[17];
 	static unsigned int		message_number;
-	static unsigned char	is_connect;
+	static unsigned int		is_connect;
 	
 	memset(buffer, 0, 256);
 	get_current_time(date);
@@ -75,14 +98,16 @@ int	msg_log(char *message, int type)
 	static void	*zmq_ctx;
 	static void	*req_sock;
 
-	if (!zmq_ctx)
-		{zmq_ctx = zmq_ctx_new(); printf ("init_ZMQ");}
+	if (!zmq_ctx) //gambiarra para não ter que declarar os endpoints como globais
+		zmq_ctx = zmq_ctx_new();
 	if (!req_sock)
 		req_sock = zmq_socket(zmq_ctx, ZMQ_REQ);
 	if (!is_connect)
 	{
-		zmq_connect (req_sock, "tcp://localhost:5555"); //mudar aqui pra pegar arquivo editavel;
-		is_connect = 1;
+		// get_endpoint_from_config_file("piscine_server", rcv_buffer); //ZMQ não está conectando a nao ser com uma literal.
+		if (!zmq_connect (req_sock, ZMQ_SERVER_ENDP))
+			is_connect = 1;
+		// memset(rcv_buffer, 0 , 256);
 	}
 	if (type == FT_MSG_GENERAL)
 		if (!strcmp(message, "Exit successful"))
@@ -96,9 +121,6 @@ int	msg_log(char *message, int type)
 		zmq_recv(req_sock, rcv_buffer, 256, 0);
 	}
 	//FAZER TRATATIVAS DE RETORNO DO SERVER AQUI
-	
-
-
 	#endif //ZEROMQ
 
 	#ifdef PLAIN_SOCKET
